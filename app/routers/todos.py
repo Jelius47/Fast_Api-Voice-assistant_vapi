@@ -16,28 +16,33 @@ def process_toolcall(request: schemas.VapiRequest, function_name: str):
 
 @router.post("/create_todo/")
 async def create_todo(request: Request, db: Session = Depends(get_db)):
-    raw_body = await request.body()  # Get the raw JSON payload
+    raw_body = await request.body()  # Get the raw request body
     logging.info(f"Received raw request: {raw_body.decode('utf-8')}")  # Log it
     
-    parsed_body = await request.json()  # Parse the JSON
-    logging.info(f"Parsed request body: {parsed_body}")  # Log parsed JSON
-    
-    request_obj = schemas.VapiRequest(**parsed_body)  # Validate against schema
+    try:
+        parsed_body = await request.json()  # Parse JSON
+        logging.info(f"Parsed request body: {parsed_body}")  # Log parsed JSON
+        
+        # Validate against schema
+        request_obj = schemas.VapiRequest(**parsed_body)
+    except Exception as e:
+        logging.error(f"Schema validation error: {e}")  # Log schema validation error
+        raise HTTPException(status_code=400, detail=str(e))  # Return error
 
     tool_call = process_toolcall(request_obj, "createTodo")
     args = tool_call.function.arguments
-    
+
     if isinstance(args, str):
         args = json.loads(args)
-    
+
     todo_data = {
         "title": args.get("title", ""),
         "description": args.get("description", "")
     }
-    
+
     if not todo_data["title"]:
         raise HTTPException(status_code=400, detail="Missing title")
-    
+
     todo = crud.create_todo(db, todo_data)
 
     return {
