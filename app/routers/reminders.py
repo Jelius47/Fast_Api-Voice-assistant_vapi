@@ -8,7 +8,7 @@ from .todos import process_toolcall
 
 router = APIRouter( tags=["todos"])
 
-@router.post("/add_reminder/", response_model=schemas.ReminderResponse)
+@router.post("/add_reminder/")
 def add_reminder(request: schemas.VapiRequest, db: Session = Depends(get_db)):
     tool_call = process_toolcall(request, "addReminder")
     args = tool_call.function.arguments
@@ -29,7 +29,7 @@ def add_reminder(request: schemas.VapiRequest, db: Session = Depends(get_db)):
         }]
     }
 
-@router.post("/get_reminders/",response_model=schemas.ReminderResponse)
+@router.post("/get_reminders/")
 def get_reminders(request:schemas.VapiRequest,db: Session=Depends(get_db)):
     tool_call = process_toolcall(request,"getReminders")
     reminders = crud.get_reminders(db=db)
@@ -41,7 +41,7 @@ def get_reminders(request:schemas.VapiRequest,db: Session=Depends(get_db)):
     }
    
 
-@router.post("/delete_reminder/",response_model=schemas.ReminderResponse)
+@router.post("/delete_reminder/")
 def delete_reminder(request: schemas.VapiRequest,db:Session=Depends(get_db)):
     tool_call = process_toolcall(request, "deleteReminder")
     args = tool_call.function.arguments

@@ -12,7 +12,7 @@ def process_toolcall(request: schemas.VapiRequest, function_name: str):
             return tool_call
     raise HTTPException(status_code=400, detail="Invalid Request")
 
-@router.post("/create_todo/",response_model=schemas.TodoResponse)
+@router.post("/create_todo/")
 def create_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
     tool_call = process_toolcall(request, "createTodo")
     args = tool_call.function.arguments
@@ -34,7 +34,7 @@ def create_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
         }]
     }
 
-@router.post("/get_todos/", response_model=schemas.TodoResponse)
+@router.post("/get_todos/")
 def get_todos(request: schemas.VapiRequest, db: Session = Depends(get_db)):
     tool_call = process_toolcall(request, "getTodos")
     todos = crud.get_todos(db)
@@ -45,7 +45,7 @@ def get_todos(request: schemas.VapiRequest, db: Session = Depends(get_db)):
         }]
     }
 
-@router.post("/complete_todo/", response_model=schemas.TodoResponse)
+@router.post("/complete_todo/")
 def complete_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
     tool_call = process_toolcall(request, "completeTodo")
     args = tool_call.function.arguments
@@ -68,7 +68,7 @@ def complete_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
         }]
     }
 
-@router.post("/delete_todo/", response_model=schemas.TodoResponse)
+@router.post("/delete_todo/")
 def delete_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
     tool_call = process_toolcall(request, "deleteTodo")
     args = tool_call.function.arguments
