@@ -3,6 +3,8 @@ import json
 from sqlalchemy.orm import Session
 from .. import schemas, crud
 from ..database import get_db
+import logging
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter( tags=["todos"])
 
@@ -13,8 +15,16 @@ def process_toolcall(request: schemas.VapiRequest, function_name: str):
     raise HTTPException(status_code=400, detail="Invalid Request")
 
 @router.post("/create_todo/")
-def create_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
-    tool_call = process_toolcall(request, "createTodo")
+async def create_todo(request: Request, db: Session = Depends(get_db)):
+    raw_body = await request.body()  # Get the raw JSON payload
+    logging.info(f"Received raw request: {raw_body.decode('utf-8')}")  # Log it
+    
+    parsed_body = await request.json()  # Parse the JSON
+    logging.info(f"Parsed request body: {parsed_body}")  # Log parsed JSON
+    
+    request_obj = schemas.VapiRequest(**parsed_body)  # Validate against schema
+
+    tool_call = process_toolcall(request_obj, "createTodo")
     args = tool_call.function.arguments
     
     if isinstance(args, str):
@@ -25,8 +35,11 @@ def create_todo(request: schemas.VapiRequest, db: Session = Depends(get_db)):
         "description": args.get("description", "")
     }
     
-    todo = crud.create_todo(db, todo_data)
+    if not todo_data["title"]:
+        raise HTTPException(status_code=400, detail="Missing title")
     
+    todo = crud.create_todo(db, todo_data)
+
     return {
         "result": [{
             "toolcallId": tool_call.id,
