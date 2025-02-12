@@ -8,7 +8,7 @@ from .todos import process_toolcall
 
 router = APIRouter( tags=["todos"])
 
-@router.post("/add_reminder/", response_model=schemas.VapiRequest)
+@router.post("/add_reminder/", response_model=schemas.ReminderResponse)
 def add_reminder(request: schemas.VapiRequest, db: Session = Depends(get_db)):
     tool_call = process_toolcall(request, "addReminder")
     args = tool_call.function.arguments
@@ -21,27 +21,27 @@ def add_reminder(request: schemas.VapiRequest, db: Session = Depends(get_db)):
         "importance" : args.get("importance")
     }
     
-    todo = crud.create_todo(db, todo_data)
+    reminder = crud.create_todo(db, todo_data)
     return {
         "result": [{
             "toolcallId": tool_call.id,
-            "result": schemas.TodoResponse.from_orm(todo).dict()
+            "result": schemas.ReminderResponse.model_validate(reminder).model_dump()
         }]
     }
 
-@router.post("/get_reminders/",response_model=schemas.VapiRequest)
+@router.post("/get_reminders/",response_model=schemas.ReminderResponse)
 def get_reminders(request:schemas.VapiRequest,db: Session=Depends(get_db)):
     tool_call = process_toolcall(request,"getReminders")
     reminders = crud.get_reminders(db=db)
     return {
         "result": [{
             "toolcallId": tool_call.id,
-            "result": [schemas.ReminderResponse.from_orm(reminder).dict() for reminder in reminders]
+            "result": [schemas.ReminderResponse.model_validate(reminder).model_dump() for reminder in reminders]
         }]
     }
    
 
-@router.post("/delete_reminder/",response_model=schemas.VapiRequest)
+@router.post("/delete_reminder/",response_model=schemas.ReminderResponse)
 def delete_reminder(request: schemas.VapiRequest,db:Session=Depends(get_db)):
     tool_call = process_toolcall(request, "deleteReminder")
     args = tool_call.function.arguments

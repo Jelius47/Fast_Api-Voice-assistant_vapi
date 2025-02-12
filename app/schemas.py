@@ -21,7 +21,6 @@ class VapiRequest(BaseModel):
 # call the other classes iteratively
 
 class TodoResponse(BaseModel):
-    id: int
     title:str
     description: Union[str,None]
     completed: bool
@@ -30,7 +29,6 @@ class TodoResponse(BaseModel):
         orm_model = True
 
 class ReminderResponse(BaseModel):
-    id: int
     reminder_text:str
     importance: str
 
@@ -39,7 +37,6 @@ class ReminderResponse(BaseModel):
 
 
 class CalenderEventResponse(BaseModel):
-    id: int
     title:str
     description: Union[str,None]
     event_from: dt.datetime

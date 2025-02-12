@@ -7,7 +7,7 @@ from .todos import process_toolcall
 
 router = APIRouter( tags=["todos"])
 
-@router.post("/add_calender_entry/",response_model=schemas.VapiRequest)
+@router.post("/add_calender_entry/",response_model=schemas.CalenderEventResponse)
 def add_callender_entry(request: schemas.VapiRequest,db:Session=Depends(get_db)):
     tool_call = process_toolcall(request, "addCalenderEntry")
     args = tool_call.function.arguments
@@ -26,12 +26,12 @@ def add_callender_entry(request: schemas.VapiRequest,db:Session=Depends(get_db))
     return {
         "result": [{
             "toolcallId": tool_call.id,
-            "result": schemas.CalenderEventResponse.from_orm(event).dict()
+            "result": schemas.CalenderEventResponse.model_validate(event).model_dump()
         }]
     }
 
 
-@router.post("/get_calender_entries/",response_model=schemas.VapiRequest)
+@router.post("/get_calender_entries/",response_model=schemas.CalenderEventResponse)
 def get_callender_entries(request : schemas.VapiRequest,db: Session = Depends(get_db)):
 
     tool_call = process_toolcall(request,"getCalenderEntries")
@@ -39,11 +39,11 @@ def get_callender_entries(request : schemas.VapiRequest,db: Session = Depends(ge
     return {
         "result": [{
             "toolcallId": tool_call.id,
-            "result": [schemas.ReminderResponse.from_orm(calender).dict() for calender in calenders]
+            "result": [schemas.CalenderEventResponse.model_validate(calender).model_dump() for calender in calenders]
         }]
     }
 
-@router.post("/delete_calender_entry/",response_model=schemas.VapiRequest)
+@router.post("/delete_calender_entry/",response_model=schemas.CalenderEventResponse)
 def delete_calender_entry(request:schemas.VapiRequest,db:Session=Depends(get_db)):        
     tool_call = process_toolcall(request, "deleteCalenderEntry")
     args = tool_call.function.arguments
