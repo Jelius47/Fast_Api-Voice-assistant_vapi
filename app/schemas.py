@@ -1,18 +1,18 @@
 from pydantic import BaseModel
 import datetime as dt
 from typing import Optional
-from typing import Union # data types management
+from typing import Union ,List,Dict # data types management
 
 class ToolCallFunctions(BaseModel):
     name: str
-    arguments: str | dict
+    arguments: Union[str, Dict]
 
 class ToolCall(BaseModel):
     id:str
     function: ToolCallFunctions
 
 class Message(BaseModel):
-    toolcalls: list[ToolCall]
+    toolcalls: List[ToolCall]
 
 class VapiRequest(BaseModel):
     message: Message
