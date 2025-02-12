@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 import datetime as dt
 from typing import Optional
-from typing import Union ,List,Dict # data types management
+from typing import Union ,List,Dict# data types management
 
 class ToolCallFunctions(BaseModel):
     name: str
@@ -12,7 +12,7 @@ class ToolCall(BaseModel):
     function: ToolCallFunctions
 
 class Message(BaseModel):
-   toolcalls: Optional[List[ToolCall]] = None 
+    toolcalls: Optional[List[ToolCall]] = Field(default=[])  # Default to empty list
 
 class VapiRequest(BaseModel):
     message: Message
