@@ -12,7 +12,7 @@ class ToolCall(BaseModel):
     function: ToolCallFunctions
 
 class Message(BaseModel):
-    toolcalls: List[ToolCall]
+   toolcalls: Optional[List[ToolCall]] = None 
 
 class VapiRequest(BaseModel):
     message: Message
