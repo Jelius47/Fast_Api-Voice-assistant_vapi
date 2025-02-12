@@ -150,6 +150,7 @@ def get_todos(request:VapiRequest,db:Session=Depends(get_db)):
         
     else:
         HTTPException(status_code=400,detail="Invalid Request")
+        
 @app.post("/complete_todo/")
 def complete_todo(request: VapiRequest,db :Session = Depends(get_db)):
     for tool_call in request.message.toolcalls:
@@ -229,3 +230,161 @@ def delete_todo(request: VapiRequest,db:Session=Depends(get_db)):
             }
         ]
     }
+@app.post("/add_reminder/")
+def add_reminder(request : VapiRequest,db: Session = Depends(get_db)):
+    for tool_call in request.message.toolcalls:
+        if tool_call.function.name == "addReminder":
+            args = tool_call.function.arguments
+
+            if isinstance(args,str):
+                args = json.loads(args)
+            reminder_text = args.get("reminder_text")
+            importance = args.get("importance")
+
+            if not reminder_text or not importance:
+                raise HTTPException(status_code=400,detail="Missing the required fields")
+
+            reminder = Reminder(reminder_text= reminder_text,importance=importance)
+            db.add(reminder)
+            db.commit()
+            db.refresh(reminder)
+
+            return {
+        "result":[
+            {
+                "toolcallId":tool_call.id,
+                "result": ReminderResponse.from_orm(reminder).dict()
+            }
+        ]
+    }
+    raise HTTPException(status_code=400,detail="Invalid request")
+
+@app.post("/get_reminders/")
+def get_reminers(request:VapiRequest,db: Session=Depends(get_db)):
+    for tool_call in request.message.toolcalls:
+        if tool_call.function.name == "getReminders":
+            reminders = db.query(Reminder).all()
+            return {
+        "result":[
+            {
+                "toolcallId":tool_call.id,
+                "result": [ReminderResponse.from_orm(reminder).dict() for reminder in reminders]
+            }
+        ]
+    }
+    raise HTTPException(status_code=400,detail="Invalid request")
+
+@app.post("/delete_reminder")
+def delete_reminder(request: VapiRequest,db:Session=Depends(get_db)):
+    for tool_call in request.message.toolcalls:
+        if tool_call.function.name == "deleteReminder":
+            args  = tool_call.function.arguments
+            if isinstance(args,str):
+                args = json.loads(args)
+            reminder_id = args.get("id")
+            
+            if not reminder_id:
+                raise HTTPException(status_code=400,detail="Missing reminder ID")
+            reminder = db.query(Reminder).filter(Reminder.id == reminder_id).first()
+
+            if not reminder:
+                raise HTTPException(status_code=400,detail="Reminder not found")
+            
+            db.delete(reminder)
+            db.commit()
+            return {
+        "result":[
+            {
+                "toolcallId":tool_call.id,
+                "result": {"id":reminder_id,"deleted":True}
+            }
+        ]
+    }
+    raise HTTPException(status_code=400,detail="Invalid Request")
+
+@app.post("/add_calender_entry/")
+def add_callender_entry(request: VapiRequest,db:Session=Depends(get_db)):
+    for tool_call in request.message.toolcalls:
+        if tool_call.function.name == "addCalenderEntry":
+            args = tool_call.function.arguments
+
+            if isinstance(args,str):
+                args = json.loads(args)
+            title = args.get("tittle",'')
+            description = args.get("description",'')
+            event_from_str = args.get("event_from",'')
+            event_to_str = args.get("event_to",'')
+
+
+            if not title or not description or not event_from_str or not event_to_str:
+                raise HTTPException(status_code=400,detail="Missing the required fields")
+            try:
+                event_from = dt.datetime.fromisoformat(event_from_str)
+                event_to = dt.datetime.fromisoformat(event_to_str)
+            except ValueError:
+                raise HTTPException(status_code=400,detail="Invalid date format.Use ISO format")
+            
+            callender_event = CalenderEvent(
+                title = title,
+                description = description,
+                event_from = event_from,
+                event_to = event_to
+            )
+ 
+            db.add(callender_event)
+            db.commit()
+            db.refresh(callender_event)
+
+            return {
+        "result":[
+            {
+                "toolcallId":tool_call.id,
+                "result": ReminderResponse.from_orm(callender_event).dict()
+            }
+        ]
+    }
+    raise HTTPException(status_code=400,detail="Invalid request")
+
+
+@app.post("/get_calender_entries/")
+def get_callender_entries(request : VapiRequest,db: Session = Depends(get_db)):
+    for tool_call in request.message.toolcalls:
+        if tool_call.function.name == "getCalenderEntries":
+            events = db.query(CalenderEvent).all()
+            return {
+        "result":[
+            {
+                "toolcallId":tool_call.id,
+                "result": [CalenderEventResponse.from_orm(event).dict() for event in events]
+            }
+        ]
+    }
+    raise HTTPException(status_code=400,detail="Invalid request")
+
+@app.post("/delete_calender_entry/")
+def delete_calender_entry(request:VapiRequest,db:Session=Depends(get_db)):        
+    for tool_call in request.message.toolcalls:
+        if tool_call.function.name == "deleteCalenderEntry":
+            args  = tool_call.function.arguments
+            if isinstance(args,str):
+                args = json.loads(args)
+            event_id = args.get("id")
+            
+            if not event_id:
+                raise HTTPException(status_code=400,detail="Missing reminder ID")
+            event = db.query(CalenderEvent).filter(CalenderEvent.id == event_id).first()
+
+            if not event:
+                raise HTTPException(status_code=400,detail="Reminder not found")
+            
+            db.delete(event)
+            db.commit()
+            return {
+        "result":[
+            {
+                "toolcallId":tool_call.id,
+                "result": {"id":event_id,"deleted":True}
+            }
+        ]
+    }
+    raise HTTPException(status_code=400,detail="Invalid Request")
