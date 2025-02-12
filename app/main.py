@@ -10,6 +10,6 @@ app.include_router(todos.router)
 app.include_router(reminders.router)
 app.include_router(calender.router)
 
-@app.get("/")
+@app.post("/")
 def read_root():
     return {"message": "Voice Assistant API"}
