@@ -9,10 +9,16 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter( tags=["todos"])
 
 def process_toolcall(request: schemas.VapiRequest, function_name: str):
+    if not request.message.toolcalls:
+        logging.error("No tool calls found in the request!")
+        raise HTTPException(status_code=400, detail="Invalid request: Missing toolcalls")
+    
     for tool_call in request.message.toolcalls:
         if tool_call.function.name == function_name:
-            return tool_call
-    raise HTTPException(status_code=400, detail="Invalid Request")
+            return tool_call  # ✅ Return the tool call if found
+    
+    logging.error(f"Function '{function_name}' not found in tool calls!")
+    raise HTTPException(status_code=400, detail=f"Function '{function_name}' not found")
 
 @router.post("/create_todo/")
 async def create_todo(request: Request, db: Session = Depends(get_db)):
